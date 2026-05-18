@@ -73,6 +73,17 @@
                     <div id="reader"></div>
                 </div>
 
+                {{-- Pilih Kamera --}}
+                <div class="mb-3">
+                    <label class="form-label small text-muted mb-1">
+                        <i class="bi bi-camera-video me-1"></i> Pilih Kamera
+                    </label>
+                    <select id="cameraSelect" class="form-select form-select-sm">
+                        <option value="">— Memuat daftar kamera... —</option>
+                    </select>
+                    <div class="form-text">Pilih <strong>OBS Virtual Camera</strong> jika pakai OBS</div>
+                </div>
+
                 <div class="d-flex gap-2 flex-wrap">
                     <button id="btnStart" class="btn btn-primary">
                         <i class="bi bi-play-fill me-1"></i> Mulai Scan
@@ -230,6 +241,28 @@ let scanCount = 0;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 // ==========================================
+// LOAD KAMERA
+// ==========================================
+Html5Qrcode.getCameras().then(cameras => {
+    const sel = document.getElementById('cameraSelect');
+    sel.innerHTML = '';
+    if (cameras.length === 0) {
+        sel.innerHTML = '<option value="">Tidak ada kamera ditemukan</option>';
+        return;
+    }
+    cameras.forEach((cam, i) => {
+        const opt = document.createElement('option');
+        opt.value = cam.id;
+        opt.textContent = cam.label || ('Kamera ' + (i + 1));
+        if (cam.label && cam.label.toLowerCase().includes('obs')) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}).catch(err => {
+    document.getElementById('cameraSelect').innerHTML =
+        '<option value="">Gagal memuat: ' + err + '</option>';
+});
+
+// ==========================================
 // SHOW PANEL
 // ==========================================
 function showPanel(name) {
@@ -340,8 +373,14 @@ function startScanner() {
 
     const boxSize = Math.min(Math.floor(document.getElementById('reader').clientWidth * 0.85), 260);
 
+    // Gunakan deviceId dari dropdown (support OBS Virtual Camera)
+    const selectedCameraId = document.getElementById('cameraSelect').value;
+    const cameraConstraint = selectedCameraId
+        ? { deviceId: { exact: selectedCameraId } }
+        : { facingMode: "environment" };
+
     html5QrCode.start(
-        { facingMode: "environment" },
+        cameraConstraint,
         {
             fps: 10,
             qrbox: { width: boxSize, height: boxSize },
