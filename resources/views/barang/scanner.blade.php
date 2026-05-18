@@ -9,6 +9,8 @@
     }
     /* Override html5-qrcode default border */
     #reader > div:first-child { border: none !important; }
+    /* Mirror kamera (flip horizontal) */
+    #reader video { transform: scaleX(-1); }
 
     .scan-overlay {
         position: relative;
@@ -79,17 +81,6 @@
                             <i class="mdi mdi-camera me-1"></i>
                             Izinkan akses kamera saat diminta browser
                         </p>
-                    </div>
-
-                    {{-- Pilih Kamera --}}
-                    <div class="mb-3" id="cameraSelectWrap">
-                        <label class="form-label small text-muted mb-1">
-                            <i class="mdi mdi-camera-switch me-1"></i> Pilih Kamera
-                        </label>
-                        <select id="cameraSelect" class="form-select form-select-sm">
-                            <option value="">— Memuat daftar kamera... —</option>
-                        </select>
-                        <div class="form-text">Pilih <strong>OBS Virtual Camera</strong> jika pakai OBS</div>
                     </div>
 
                     {{-- Tombol --}}
@@ -240,35 +231,6 @@ let html5QrCode = null;
 let scannerRunning = false;
 let scanHistory = [];
 let scanCount = 0;
-let availableCameras = [];
-
-// ==========================================
-// LOAD KAMERA (termasuk OBS Virtual Camera)
-// ==========================================
-Html5Qrcode.getCameras().then(cameras => {
-    availableCameras = cameras;
-    const sel = document.getElementById('cameraSelect');
-    sel.innerHTML = '';
-
-    if (cameras.length === 0) {
-        sel.innerHTML = '<option value="">Tidak ada kamera ditemukan</option>';
-        return;
-    }
-
-    cameras.forEach((cam, i) => {
-        const opt = document.createElement('option');
-        opt.value = cam.id;
-        opt.textContent = cam.label || ('Kamera ' + (i + 1));
-        // Auto-pilih OBS Virtual Camera jika ada
-        if (cam.label && cam.label.toLowerCase().includes('obs')) {
-            opt.selected = true;
-        }
-        sel.appendChild(opt);
-    });
-}).catch(err => {
-    document.getElementById('cameraSelect').innerHTML =
-        '<option value="">Gagal memuat kamera: ' + err + '</option>';
-});
 
 // ==========================================
 // SHOW / HIDE PANELS
@@ -350,15 +312,8 @@ function startScanner() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // Gunakan deviceId dari dropdown (support OBS Virtual Camera)
-    const selectedCameraId = document.getElementById('cameraSelect').value;
-    const cameraConstraint = selectedCameraId
-        ? { deviceId: { exact: selectedCameraId } }
-        : { facingMode: "environment" };
-
     const config = {
         fps: 10,
-        // Lebar qrbox untuk barcode 1D (CODE-128)
         qrbox: { width: Math.min(Math.floor(document.getElementById('reader').clientWidth * 0.9), 380), height: 100 },
         aspectRatio: 1.7,
         formatsToSupport: [
@@ -371,7 +326,7 @@ function startScanner() {
     };
 
     html5QrCode.start(
-        cameraConstraint,
+        { facingMode: "environment" },
         config,
         // ON SUCCESS
         function(decodedText) {
