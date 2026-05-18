@@ -264,5 +264,23 @@
                 </ul>
               </div>
             </li>
+            {{-- Week 8: Barcode & QR Code Reader --}}
+            <li class="nav-item">
+              <a class="nav-link {{ request()->is('barang/scanner*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week8" aria-expanded="{{ request()->is('barang/scanner*') ? 'true' : 'false' }}" aria-controls="week8">
+                <span class="menu-title">Week 8</span>
+                <i class="menu-arrow"></i>
+                <i class="mdi mdi-numeric-8-box menu-icon"></i>
+              </a>
+              <div class="collapse {{ request()->is('barang/scanner*') ? 'show' : '' }}" id="week8">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item">
+                    <a class="nav-link {{ request()->is('barang/scanner') ? 'active' : '' }}" href="{{ route('barang.scanner') }}">Barcode Scanner</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ route('vendor.login') }}" target="_blank">QR Scanner (Vendor)</a>
+                  </li>
+                </ul>
+              </div>
+            </li>
           </ul>
         </nav>

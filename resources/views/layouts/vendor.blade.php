@@ -77,6 +77,9 @@
                         <a class="nav-link {{ request()->routeIs('vendor.pesanan.lunas') ? 'active' : '' }}" href="{{ route('vendor.pesanan.lunas') }}">
                             <i class="bi bi-bag-check me-2"></i> Pesanan Lunas
                         </a>
+                        <a class="nav-link {{ request()->routeIs('vendor.scan.qr') ? 'active' : '' }}" href="{{ route('vendor.scan.qr') }}">
+                            <i class="bi bi-qr-code-scan me-2"></i> Scan QR Customer
+                        </a>
                     </nav>
                 </div>
             </div>

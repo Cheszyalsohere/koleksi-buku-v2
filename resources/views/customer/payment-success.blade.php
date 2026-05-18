@@ -68,7 +68,7 @@
                             @if(isset($qrCode) && $qrCode)
                                 <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code Pesanan" style="width:180px; height:180px;" class="mb-2">
                             @endif
-                            <p class="text-muted small mb-0">QR Code berisi ID Pesanan</p>
+                            <p class="text-muted small mb-0">Tunjukkan QR Code ini ke vendor saat mengambil pesanan</p>
                         </div>
                     </div>
 
@@ -132,6 +132,24 @@
                         </table>
                     </div>
 
+                    {{-- Simpan Link QR Code --}}
+                    <div class="card-body border-top">
+                        <div class="alert alert-info mb-0 py-2 px-3 d-flex align-items-start gap-2" style="font-size:13px;">
+                            <i class="bi bi-bookmark-heart-fill fs-5 text-primary flex-shrink-0 mt-1"></i>
+                            <div>
+                                <strong>Simpan halaman ini!</strong><br>
+                                Kamu bisa akses QR Code kapanpun lewat link ini:<br>
+                                <div class="input-group input-group-sm mt-1">
+                                    <input type="text" class="form-control font-monospace" id="receiptUrl"
+                                        value="{{ url('/order/payment-success/' . $pesanan->kode_pesanan) }}" readonly>
+                                    <button class="btn btn-outline-primary" id="btnCopyLink" type="button">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card-body border-top text-center">
                         @if($pesanan->status_bayar === 'pending')
                             <button type="button" id="btnSimulate" class="btn btn-warning mb-2 w-100">
@@ -152,6 +170,21 @@
 
     <script>
     $(document).ready(function() {
+
+        // ============ COPY LINK ============
+        $('#btnCopyLink').on('click', function() {
+            const url = document.getElementById('receiptUrl');
+            url.select();
+            url.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(url.value).then(function() {
+                $('#btnCopyLink').html('<i class="bi bi-check2"></i>').removeClass('btn-outline-primary').addClass('btn-success');
+                setTimeout(() => {
+                    $('#btnCopyLink').html('<i class="bi bi-clipboard"></i>').removeClass('btn-success').addClass('btn-outline-primary');
+                }, 2000);
+            }).catch(function() {
+                document.execCommand('copy');
+            });
+        });
         const kodePesanan = '{{ $pesanan->kode_pesanan }}';
         let currentStatus = '{{ $pesanan->status_bayar }}';
 

@@ -71,6 +71,43 @@ class BarangController extends Controller
     }
 
 
+    // =============================================
+    // Week 8 - Barcode Scanner
+    // =============================================
+
+    /**
+     * Halaman barcode scanner
+     */
+    public function scanner()
+    {
+        return view('barang.scanner');
+    }
+
+    /**
+     * AJAX: cari barang berdasarkan id_barang (hasil scan barcode)
+     */
+    public function findById($id)
+    {
+        $barang = Barang::find($id);
+
+        if (!$barang) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Barang dengan ID "' . $id . '" tidak ditemukan',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id_barang'   => $barang->id_barang,
+                'nama'        => $barang->nama,
+                'harga'       => $barang->harga,
+                'harga_format' => 'Rp ' . number_format($barang->harga, 0, ',', '.'),
+            ]
+        ]);
+    }
+
     public function cetak(Request $request)
     {
         $request->validate([

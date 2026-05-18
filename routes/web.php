@@ -32,8 +32,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('kategori', KategoriController::class);
     Route::resource('buku', BukuController::class);
 
-    Route::post('/barang/cetak', [BarangController::class, 'cetak'])
-    ->name('barang.cetak');
+    Route::post('/barang/cetak', [BarangController::class, 'cetak'])->name('barang.cetak');
+    // Week 8: harus SEBELUM resource agar tidak tertimpa /barang/{id}
+    Route::get('/barang/scanner', [BarangController::class, 'scanner'])->name('barang.scanner');
+    Route::get('/barang/find/{id}', [BarangController::class, 'findById'])->name('barang.find');
     Route::resource('barang', BarangController::class);
 
     Route::get('/pdf-sertifikat', [PdfController::class, 'sertifikat']);
@@ -99,5 +101,9 @@ Route::prefix('vendor')->group(function () {
         Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('vendor.dashboard');
         Route::get('/pesanan-lunas', [VendorDashboardController::class, 'pesananLunas'])->name('vendor.pesanan.lunas');
         Route::resource('/menu', VendorMenuController::class)->names('vendor.menu');
+
+        // Week 8 - QR Code Scanner
+        Route::get('/scan-qr', [VendorDashboardController::class, 'scanQr'])->name('vendor.scan.qr');
+        Route::post('/scan-qr/find', [VendorDashboardController::class, 'findByQr'])->name('vendor.scan.qr.find');
     });
 });
