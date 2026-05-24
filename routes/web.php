@@ -12,6 +12,7 @@ use App\Http\Controllers\VendorMenuController;
 use App\Http\Controllers\VendorDashboardController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\NfcAbsensiController;
 
 Auth::routes();
 
@@ -64,6 +65,16 @@ Route::middleware(['auth'])->group(function () {
         return view('tugas-ajax.wilayah-axios');
     })->name('wilayah-axios');
 
+    // Week 9 - NFC Admin (auth required)
+    Route::prefix('nfc')->name('nfc.')->group(function () {
+        Route::get('/mahasiswa', [NfcAbsensiController::class, 'mahasiswa'])->name('mahasiswa');
+        Route::post('/mahasiswa', [NfcAbsensiController::class, 'storeMahasiswa'])->name('mahasiswa.store');
+        Route::delete('/mahasiswa/{id}', [NfcAbsensiController::class, 'destroyMahasiswa'])->name('mahasiswa.destroy');
+        Route::patch('/mahasiswa/{id}/unlink', [NfcAbsensiController::class, 'unlinkKartu'])->name('mahasiswa.unlink');
+        Route::get('/riwayat', [NfcAbsensiController::class, 'riwayat'])->name('riwayat');
+        Route::delete('/absensi/{id}', [NfcAbsensiController::class, 'destroyAbsensi'])->name('absensi.destroy');
+    });
+
     // Week 7 - Barcode, QR Code & Kamera
     Route::prefix('customer-manage')->name('customer-manage.')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('index');
@@ -74,6 +85,12 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [CustomerController::class, 'destroy'])->name('destroy');
     });
 });
+
+// Week 9 - NFC Absensi (Scanner: no auth — diakses dari HP via ngrok)
+Route::get('/nfc/scanner', [NfcAbsensiController::class, 'scanner'])->name('nfc.scanner');
+Route::get('/nfc/get-mahasiswas', [NfcAbsensiController::class, 'getMahasiswas'])->name('nfc.get.mahasiswas');
+Route::post('/nfc/scan', [NfcAbsensiController::class, 'scan'])->name('nfc.scan');
+Route::post('/nfc/register-kartu', [NfcAbsensiController::class, 'registerKartu'])->name('nfc.register.kartu');
 
 // Week 6 - Payment Gateway
 

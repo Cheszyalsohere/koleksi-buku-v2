@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contoh Barcode — Koleksi Buku</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body { background: #f8fafc; font-family: Arial, sans-serif; }
+        .barcode-card {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .barcode-card:hover { border-color: #3b82f6; box-shadow: 0 0 0 3px #bfdbfe; }
+        .barcode-card svg { max-width: 100%; }
+        .item-id   { font-family: monospace; font-weight: 700; font-size: 15px; color: #1e3a5f; }
+        .item-nama { font-size: 13px; color: #475569; }
+        .item-harga{ font-size: 14px; font-weight: 600; color: #16a34a; }
+
+        /* Fullscreen barcode overlay */
+        #overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: #fff;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            cursor: pointer;
+        }
+        #overlay.show { display: flex; }
+        #overlay svg { width: min(90vw, 500px); height: auto; }
+        #overlay .overlay-info { margin-top: 20px; text-align: center; }
+        #overlay .overlay-id   { font-family: monospace; font-size: 22px; font-weight: 700; color: #1e3a5f; }
+        #overlay .overlay-nama { font-size: 16px; color: #475569; }
+        #overlay .overlay-harga{ font-size: 20px; font-weight: 700; color: #16a34a; margin-top: 4px; }
+        #overlay .tap-hint     { font-size: 12px; color: #94a3b8; margin-top: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1">Contoh Barcode Barang</h4>
+        <p class="text-muted mb-0">Klik salah satu barcode → tampil fullscreen → scan pakai kamera scanner</p>
+        <div class="alert alert-info py-2 mt-2" style="font-size:13px;">
+            <i class="bi bi-lightbulb me-1"></i>
+            <strong>Cara test:</strong>
+            Buka halaman ini di <strong>HP</strong> (atau layar lain), lalu scan barcodenya dari PC menggunakan <a href="/barang/scanner" target="_blank">Barcode Scanner</a>.
+        </div>
+    </div>
+
+    <div class="row g-3" id="barcodeGrid"></div>
+</div>
+
+{{-- Fullscreen Overlay --}}
+<div id="overlay" onclick="closeOverlay()">
+    <div id="overlayBarcode"></div>
+    <div class="overlay-info">
+        <div class="overlay-id" id="overlayId"></div>
+        <div class="overlay-nama" id="overlayNama"></div>
+        <div class="overlay-harga" id="overlayHarga"></div>
+        <div class="tap-hint">Ketuk untuk menutup</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+{{-- JsBarcode — generate barcode di browser --}}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+<script>
+const barangs = [
+    { id: 'BRG0001', nama: 'Gula 1kg',          harga: 15000 },
+    { id: 'BRG0002', nama: 'Beras 5kg',          harga: 65000 },
+    { id: 'BRG0003', nama: 'Minyak Goreng 1L',   harga: 18000 },
+    { id: 'BRG0004', nama: 'Telur 1kg',          harga: 27000 },
+    { id: 'BRG0005', nama: 'Kopi Sachet',         harga: 2000  },
+    { id: 'BRG0006', nama: 'Teh Celup',           harga: 5000  },
+    { id: 'BRG0007', nama: 'Sabun Mandi',         harga: 4500  },
+    { id: 'BRG0008', nama: 'Shampoo 100ml',       harga: 12000 },
+    { id: 'BRG0009', nama: 'Mie Instan',          harga: 3000  },
+    { id: 'BRG0010', nama: 'Susu UHT 1L',         harga: 8000  },
+    { id: 'BRG011',  nama: 'Pensil 2B',           harga: 3000  },
+    { id: 'BRG012',  nama: 'Penghapus',           harga: 2000  },
+    { id: 'BRG013',  nama: 'Buku Tulis',          harga: 5000  },
+    { id: 'BRG014',  nama: 'Penggaris 30cm',      harga: 4000  },
+    { id: 'BRG015',  nama: 'Pulpen Hitam',        harga: 3500  },
+    { id: 'BRG016',  nama: 'Spidol Merah',        harga: 7000  },
+    { id: 'BRG017',  nama: 'Tip-X',               harga: 6000  },
+    { id: 'BRG018',  nama: 'Lem Kertas',          harga: 4500  },
+    { id: 'BRG019',  nama: 'Gunting',             harga: 12000 },
+    { id: 'BRG020',  nama: 'Stapler',             harga: 15000 },
+];
+
+function rupiah(n) {
+    return 'Rp ' + n.toLocaleString('id-ID');
+}
+
+// Render semua kartu
+const grid = document.getElementById('barcodeGrid');
+barangs.forEach((b, i) => {
+    const col = document.createElement('div');
+    col.className = 'col-6 col-md-4 col-lg-3';
+    col.innerHTML = `
+        <div class="barcode-card" onclick="openOverlay(${i})">
+            <svg id="bc-${i}"></svg>
+            <div class="item-id mt-1">${b.id}</div>
+            <div class="item-nama">${b.nama}</div>
+            <div class="item-harga">${rupiah(b.harga)}</div>
+        </div>`;
+    grid.appendChild(col);
+
+    // Generate barcode CODE_128
+    JsBarcode(`#bc-${i}`, b.id, {
+        format: 'CODE128',
+        lineColor: '#000',
+        width: 2,
+        height: 50,
+        displayValue: false,
+        margin: 4,
+    });
+});
+
+// Fullscreen
+function openOverlay(i) {
+    const b = barangs[i];
+    const overlayDiv = document.getElementById('overlayBarcode');
+    overlayDiv.innerHTML = `<svg id="bc-overlay"></svg>`;
+
+    document.getElementById('overlayId').textContent    = b.id;
+    document.getElementById('overlayNama').textContent  = b.nama;
+    document.getElementById('overlayHarga').textContent = rupiah(b.harga);
+
+    JsBarcode('#bc-overlay', b.id, {
+        format: 'CODE128',
+        lineColor: '#000',
+        width: 4,
+        height: 120,
+        displayValue: true,
+        font: 'monospace',
+        fontSize: 18,
+        margin: 10,
+    });
+
+    document.getElementById('overlay').classList.add('show');
+}
+
+function closeOverlay() {
+    document.getElementById('overlay').classList.remove('show');
+}
+
+// ESC untuk tutup overlay
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeOverlay();
+});
+</script>
+</body>
+</html>

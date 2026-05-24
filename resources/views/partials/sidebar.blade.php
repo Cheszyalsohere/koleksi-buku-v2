@@ -264,6 +264,27 @@
                 </ul>
               </div>
             </li>
+            {{-- Week 9: NFC Absensi --}}
+            <li class="nav-item">
+              <a class="nav-link {{ request()->is('nfc*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week9" aria-expanded="{{ request()->is('nfc*') ? 'true' : 'false' }}" aria-controls="week9">
+                <span class="menu-title">Week 9</span>
+                <i class="menu-arrow"></i>
+                <i class="mdi mdi-numeric-9-box menu-icon"></i>
+              </a>
+              <div class="collapse {{ request()->is('nfc*') ? 'show' : '' }}" id="week9">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ route('nfc.scanner') }}" target="_blank">Scanner NFC (HP)</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link {{ request()->is('nfc/mahasiswa') ? 'active' : '' }}" href="{{ route('nfc.mahasiswa') }}">Data Mahasiswa</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link {{ request()->is('nfc/riwayat') ? 'active' : '' }}" href="{{ route('nfc.riwayat') }}">Riwayat Absensi</a>
+                  </li>
+                </ul>
+              </div>
+            </li>
             {{-- Week 8: Barcode & QR Code Reader --}}
             <li class="nav-item">
               <a class="nav-link {{ request()->is('barang/scanner*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week8" aria-expanded="{{ request()->is('barang/scanner*') ? 'true' : 'false' }}" aria-controls="week8">
