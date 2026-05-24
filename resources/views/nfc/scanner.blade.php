@@ -75,16 +75,17 @@
         .form-control-dark:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px #2563eb33; }
         .form-control-dark option { background: #1e293b; }
 
-        .select2-wrap { position: relative; }
-        #searchMhs {
-            position: absolute; top: 100%; left: 0; right: 0; background: #1e293b;
-            border: 1px solid #334155; border-radius: 10px; max-height: 200px;
-            overflow-y: auto; z-index: 100; display: none;
+        .mhs-list {
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px;
+            max-height: 220px; overflow-y: auto; margin-top: 8px;
         }
         .mhs-option {
-            padding: 10px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #334155;
+            padding: 12px 14px; cursor: pointer; font-size: 14px;
+            border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px;
         }
-        .mhs-option:hover { background: #2563eb22; }
+        .mhs-option:last-child { border-bottom: none; }
+        .mhs-option:active { background: #2563eb33; }
+        .mhs-option.selected { background: #1e3a5f; }
 
         .serial-display {
             background: #0f172a; border: 1px dashed #3b82f6; border-radius: 10px;
@@ -167,14 +168,35 @@
     {{-- ===== MODE DAFTAR KARTU ===== --}}
     <div id="panelDaftar" style="display:none;">
         <div class="card-nfc">
-            <label>Pilih Mahasiswa</label>
-            <input type="text" id="searchMhsInput" class="form-control-dark"
-                placeholder="Cari nama atau NIM..." autocomplete="off">
-            <div id="searchMhs">
-                <div class="mhs-option" style="color:#64748b;">Memuat...</div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="mb-0">Pilih Mahasiswa</label>
+                <button onclick="loadMahasiswas()" style="background:transparent;border:none;color:#60a5fa;font-size:13px;padding:0;">
+                    <i class="bi bi-arrow-clockwise"></i> Muat Ulang
+                </button>
             </div>
+
+            {{-- Search input --}}
+            <input type="text" id="searchMhsInput" class="form-control-dark"
+                placeholder="Ketik nama atau NIM untuk cari..." autocomplete="off"
+                oninput="filterMhs(this.value)">
+
+            {{-- Daftar mahasiswa --}}
+            <div id="mhsList" class="mhs-list" style="display:none;"></div>
+
             <input type="hidden" id="selectedMhsId">
-            <div id="selectedMhsInfo" style="display:none; margin-top:10px; padding:10px; background:#0f172a; border-radius:8px; font-size:13px; color:#94a3b8;"></div>
+
+            {{-- Mahasiswa terpilih --}}
+            <div id="selectedMhsInfo" style="display:none; margin-top:10px; padding:12px; background:#0f172a; border-radius:8px; font-size:14px;">
+                <span style="color:#60a5fa;"><i class="bi bi-person-check me-1"></i></span>
+                <span id="selectedMhsText"></span>
+                <button onclick="clearMhsSelection()" style="background:transparent;border:none;color:#64748b;font-size:12px;float:right;">✕ Ganti</button>
+            </div>
+
+            <div id="mhsEmpty" style="display:none; text-align:center; padding:16px; color:#64748b; font-size:13px;">
+                <i class="bi bi-person-x" style="font-size:24px; display:block; margin-bottom:6px;"></i>
+                Belum ada mahasiswa.<br>
+                <span style="font-size:12px;">Tambahkan lewat <strong>Admin → Data Mahasiswa</strong></span>
+            </div>
         </div>
 
         <div class="card-nfc">
@@ -457,52 +479,87 @@ function showError(mode, msg) {
 // LOAD & SEARCH MAHASISWAS
 // =============================================
 function loadMahasiswas() {
+    const listEl  = document.getElementById('mhsList');
+    const emptyEl = document.getElementById('mhsEmpty');
+
+    listEl.innerHTML = '<div class="mhs-option" style="color:#64748b; justify-content:center;"><i class="bi bi-arrow-repeat pulse me-2"></i>Memuat...</div>';
+    listEl.style.display = '';
+    emptyEl.style.display = 'none';
+
     fetch('/nfc/get-mahasiswas', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(r => r.json())
-    .then(data => { allMahasiswas = data; });
+    .then(data => {
+        allMahasiswas = data;
+        filterMhs('');  // render semua
+    })
+    .catch(() => {
+        listEl.innerHTML = '<div class="mhs-option" style="color:#dc2626; justify-content:center;">Gagal memuat data</div>';
+    });
 }
 
-document.getElementById('searchMhsInput').addEventListener('focus', () => {
-    renderMhsDropdown(allMahasiswas);
-    document.getElementById('searchMhs').style.display = '';
-});
+function filterMhs(q) {
+    const listEl  = document.getElementById('mhsList');
+    const emptyEl = document.getElementById('mhsEmpty');
+    const selectedId = document.getElementById('selectedMhsId').value;
 
-document.getElementById('searchMhsInput').addEventListener('input', function() {
-    const q = this.value.toLowerCase();
-    const filtered = allMahasiswas.filter(m =>
-        m.nama.toLowerCase().includes(q) || m.nim.toLowerCase().includes(q)
-    );
-    renderMhsDropdown(filtered);
-});
+    // Kalau sudah ada yg dipilih, jangan tampilkan list lagi
+    if (selectedId) return;
 
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('#searchMhsInput') && !e.target.closest('#searchMhs')) {
-        document.getElementById('searchMhs').style.display = 'none';
-    }
-});
-
-function renderMhsDropdown(list) {
-    const dd = document.getElementById('searchMhs');
-    if (list.length === 0) {
-        dd.innerHTML = '<div class="mhs-option" style="color:#64748b;">Tidak ditemukan</div>';
+    if (allMahasiswas.length === 0) {
+        listEl.style.display = 'none';
+        emptyEl.style.display = '';
         return;
     }
-    dd.innerHTML = list.map(m =>
-        `<div class="mhs-option" onclick="selectMhs(${m.id}, '${m.nim}', '${m.nama}')">
-            <span style="font-weight:600;">${m.nama}</span>
-            <span style="color:#64748b; font-size:12px; margin-left:8px;">${m.nim}</span>
-        </div>`
-    ).join('');
+
+    const filtered = q
+        ? allMahasiswas.filter(m =>
+            m.nama.toLowerCase().includes(q.toLowerCase()) ||
+            m.nim.toLowerCase().includes(q.toLowerCase()))
+        : allMahasiswas;
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="mhs-option" style="color:#64748b; justify-content:center;">Tidak ditemukan</div>';
+    } else {
+        listEl.innerHTML = filtered.map(m => `
+            <div class="mhs-option" onclick="selectMhs(${m.id}, '${m.nim}', '${escHtml(m.nama)}')">
+                <i class="bi bi-person" style="color:#60a5fa; flex-shrink:0;"></i>
+                <div>
+                    <div style="font-weight:600; color:#f1f5f9;">${escHtml(m.nama)}</div>
+                    <div style="font-size:12px; color:#64748b; font-family:monospace;">${m.nim}${m.prodi ? ' · ' + escHtml(m.prodi) : ''}</div>
+                </div>
+            </div>`).join('');
+    }
+
+    emptyEl.style.display = 'none';
+    listEl.style.display = '';
 }
 
 function selectMhs(id, nim, nama) {
     document.getElementById('selectedMhsId').value = id;
-    document.getElementById('searchMhsInput').value = nama;
-    document.getElementById('searchMhs').style.display = 'none';
-    document.getElementById('selectedMhsInfo').innerHTML =
-        `<i class="bi bi-person-check me-1"></i> ${nama} <span style="color:#64748b">(${nim})</span>`;
+    document.getElementById('searchMhsInput').value = '';
+    document.getElementById('mhsList').style.display = 'none';
+    document.getElementById('selectedMhsText').innerHTML =
+        `<strong>${nama}</strong> <span style="color:#64748b; font-family:monospace;">(${nim})</span>`;
     document.getElementById('selectedMhsInfo').style.display = '';
+    document.getElementById('searchMhsInput').placeholder = 'Mahasiswa dipilih ↑';
 }
+
+function clearMhsSelection() {
+    document.getElementById('selectedMhsId').value = '';
+    document.getElementById('searchMhsInput').value = '';
+    document.getElementById('searchMhsInput').placeholder = 'Ketik nama atau NIM untuk cari...';
+    document.getElementById('selectedMhsInfo').style.display = 'none';
+    filterMhs('');
+}
+
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Tampilkan list saat input di-focus
+document.getElementById('searchMhsInput').addEventListener('focus', () => {
+    if (!document.getElementById('selectedMhsId').value) filterMhs('');
+});
 
 // Load mahasiswas saat halaman dibuka
 loadMahasiswas();
