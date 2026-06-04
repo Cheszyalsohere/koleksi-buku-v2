@@ -13,6 +13,7 @@ use App\Http\Controllers\VendorDashboardController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\NfcAbsensiController;
+use App\Http\Controllers\TokoController;
 
 Auth::routes();
 
@@ -64,6 +65,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/wilayah-axios', function () {
         return view('tugas-ajax.wilayah-axios');
     })->name('wilayah-axios');
+
+    // Week 9 - Geolocation: Kunjungan Toko
+    Route::prefix('toko')->name('toko.')->group(function () {
+        Route::get('/', [TokoController::class, 'index'])->name('index');
+        Route::post('/', [TokoController::class, 'store'])->name('store');
+        Route::get('/cetak-barcode/{id}', [TokoController::class, 'cetakBarcode'])->name('cetak');
+        Route::post('/find-by-barcode', [TokoController::class, 'findByBarcode'])->name('find');
+        Route::delete('/{id}', [TokoController::class, 'destroy'])->name('destroy');
+    });
 
     // Week 9 - NFC Admin (auth required)
     Route::prefix('nfc')->name('nfc.')->group(function () {

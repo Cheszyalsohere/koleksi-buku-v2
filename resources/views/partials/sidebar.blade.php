@@ -264,6 +264,21 @@
                 </ul>
               </div>
             </li>
+            {{-- Week 9: Geolocation - Kunjungan Toko --}}
+            <li class="nav-item">
+              <a class="nav-link {{ request()->is('toko*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week9geo" aria-expanded="{{ request()->is('toko*') ? 'true' : 'false' }}" aria-controls="week9geo">
+                <span class="menu-title">Week 9 — Geolocation</span>
+                <i class="menu-arrow"></i>
+                <i class="mdi mdi-map-marker-radius menu-icon"></i>
+              </a>
+              <div class="collapse {{ request()->is('toko*') ? 'show' : '' }}" id="week9geo">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item">
+                    <a class="nav-link {{ request()->is('toko') ? 'active' : '' }}" href="{{ route('toko.index') }}">Kunjungan Toko</a>
+                  </li>
+                </ul>
+              </div>
+            </li>
             {{-- Week 9: NFC Absensi --}}
             <li class="nav-item">
               <a class="nav-link {{ request()->is('nfc*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week9" aria-expanded="{{ request()->is('nfc*') ? 'true' : 'false' }}" aria-controls="week9">
