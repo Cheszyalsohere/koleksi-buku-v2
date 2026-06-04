@@ -14,6 +14,7 @@ use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\NfcAbsensiController;
 use App\Http\Controllers\TokoController;
+use App\Http\Controllers\AntrianController;
 
 Auth::routes();
 
@@ -95,6 +96,24 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [CustomerController::class, 'destroy'])->name('destroy');
     });
 });
+
+// Week 10 - Sistem Antrian Real-Time (SSE) — semua publik untuk multi-tab demo
+Route::prefix('antrian')->name('antrian.')->group(function () {
+    Route::get('/guest', [AntrianController::class, 'guest'])->name('guest');
+    Route::post('/daftar', [AntrianController::class, 'daftar'])->name('daftar');
+    Route::get('/tiket/{id}', [AntrianController::class, 'tiket'])->name('tiket');
+    Route::get('/admin', [AntrianController::class, 'admin'])->name('admin');
+    Route::get('/papan', [AntrianController::class, 'papan'])->name('papan');
+
+    // Aksi admin
+    Route::post('/panggil', [AntrianController::class, 'panggilBerikutnya'])->name('panggil');
+    Route::post('/panggil-ulang/{id}', [AntrianController::class, 'panggilUlang'])->name('panggil.ulang');
+    Route::post('/terlambat/{id}', [AntrianController::class, 'tandaiTerlambat'])->name('terlambat');
+    Route::post('/selesai/{id}', [AntrianController::class, 'selesai'])->name('selesai');
+    Route::post('/reset', [AntrianController::class, 'reset'])->name('reset');
+});
+// SSE stream endpoint
+Route::get('/sse/antrian', [AntrianController::class, 'stream'])->name('antrian.stream');
 
 // Week 9 - NFC Absensi (Scanner: no auth — diakses dari HP via ngrok)
 Route::get('/nfc/scanner', [NfcAbsensiController::class, 'scanner'])->name('nfc.scanner');

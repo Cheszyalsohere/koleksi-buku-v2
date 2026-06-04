@@ -318,5 +318,26 @@
                 </ul>
               </div>
             </li>
+            {{-- Week 10: Sistem Antrian Real-Time (SSE) --}}
+            <li class="nav-item">
+              <a class="nav-link {{ request()->is('antrian*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week10" aria-expanded="{{ request()->is('antrian*') ? 'true' : 'false' }}" aria-controls="week10">
+                <span class="menu-title">Week 10 — Antrian SSE</span>
+                <i class="menu-arrow"></i>
+                <i class="mdi mdi-bell-ring menu-icon"></i>
+              </a>
+              <div class="collapse {{ request()->is('antrian*') ? 'show' : '' }}" id="week10">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ route('antrian.guest') }}" target="_blank">Daftar Antrian (Guest)</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ route('antrian.admin') }}" target="_blank">Dashboard Admin</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ route('antrian.papan') }}" target="_blank">Papan Antrian (Display)</a>
+                  </li>
+                </ul>
+              </div>
+            </li>
           </ul>
         </nav>
