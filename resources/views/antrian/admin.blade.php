@@ -220,27 +220,30 @@ const csrf = document.querySelector('meta[name="csrf-token"]').content;
 // SSE CONNECTION
 // ============================================================
 let evtSource = null;
+let lastUpdate = 0;   // waktu update terakhir diterima
 
 function connectSSE() {
     evtSource = new EventSource('{{ route("antrian.stream") }}');
 
     evtSource.addEventListener('queue-update', (e) => {
-        setConn(true);
+        lastUpdate = Date.now();
         const data = JSON.parse(e.data);
         renderAdmin(data);
     });
 
-    evtSource.onopen = () => setConn(true);
-    evtSource.onerror = () => {
-        setConn(false);
-        // EventSource auto-reconnect; tak perlu manual
-    };
+    // onerror TIDAK dipakai untuk status — koneksi memang sengaja ditutup
+    // tiap siklus (kirim-sekali + reconnect). Status dipantau via heartbeat.
 }
 
 function setConn(live) {
     document.getElementById('connDot').className = 'conn-dot' + (live ? ' live' : '');
     document.getElementById('connText').textContent = live ? 'Terhubung (Live)' : 'Terputus…';
 }
+
+// Heartbeat: dianggap Live selama ada update dalam 3 detik terakhir
+setInterval(() => {
+    setConn(Date.now() - lastUpdate < 3000);
+}, 1000);
 
 // ============================================================
 // RENDER

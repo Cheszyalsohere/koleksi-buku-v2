@@ -234,20 +234,25 @@ function announce(nomor, nama, ruangan) {
 let evtSource = null;
 let lastCallTs = null;   // timestamp panggilan terakhir (deteksi panggilan baru)
 let firstLoad  = true;
+let lastUpdate = 0;      // waktu update terakhir diterima
 
 function connectSSE() {
     evtSource = new EventSource('{{ route("antrian.stream") }}');
 
     evtSource.addEventListener('queue-update', (e) => {
-        document.getElementById('connMini').textContent = 'live';
+        lastUpdate = Date.now();
         const data = JSON.parse(e.data);
         render(data);
     });
 
-    evtSource.onerror = () => {
-        document.getElementById('connMini').textContent = 'terputus…';
-    };
+    // onerror tidak dipakai untuk status — koneksi sengaja ditutup tiap siklus.
 }
+
+// Heartbeat: Live selama ada update dalam 3 detik terakhir
+setInterval(() => {
+    document.getElementById('connMini').textContent =
+        (Date.now() - lastUpdate < 3000) ? 'live' : 'terputus…';
+}, 1000);
 
 function render(data) {
     // NOW SERVING
