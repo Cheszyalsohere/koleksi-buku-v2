@@ -59,47 +59,28 @@ class AntrianController extends Controller
     // ============================================================
     public function stream(Request $request): StreamedResponse
     {
-        // Hindari timeout & session lock
-        @set_time_limit(0);
+        // Lepas session lock supaya request lain (POST panggil, tab lain) tidak ikut terblokir
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
 
         $response = new StreamedResponse(function () {
-            $lastPayload = null;
-            $start       = time();
+            // 'retry: 1000' = browser otomatis reconnect 1 detik setelah koneksi ditutup.
+            // Pola "kirim sekali lalu tutup" ini KOMPATIBEL dengan `php artisan serve`
+            // (single-thread) karena tiap request selesai cepat (~ms), tidak menahan
+            // server selama berdetik-detik seperti loop while(true).
+            echo "retry: 1000" . PHP_EOL;
 
-            while (true) {
-                // Stop setelah 60 detik → browser auto-reconnect (cegah proses nyangkut)
-                if (time() - $start > 60) {
-                    break;
-                }
+            $payload = $this->buildPayload();
+            echo "event: queue-update" . PHP_EOL;
+            echo "data: " . json_encode($payload) . PHP_EOL;
+            echo PHP_EOL;
 
-                $payload = $this->buildPayload();
-                $json    = json_encode($payload);
-
-                // Kirim hanya jika ada perubahan (hemat bandwidth)
-                if ($json !== $lastPayload) {
-                    echo "event: queue-update" . PHP_EOL;
-                    echo "data: " . $json . PHP_EOL;
-                    echo PHP_EOL;
-                    $lastPayload = $json;
-                } else {
-                    // Keep-alive ping (komentar SSE)
-                    echo ": ping" . PHP_EOL . PHP_EOL;
-                }
-
-                if (ob_get_level() > 0) {
-                    ob_flush();
-                }
-                flush();
-
-                if (connection_aborted()) {
-                    break;
-                }
-
-                sleep(1);
+            if (ob_get_level() > 0) {
+                ob_flush();
             }
+            flush();
+            // Koneksi ditutup di sini → EventSource akan reconnect setelah 1 detik.
         });
 
         $response->headers->set('Content-Type', 'text/event-stream');
