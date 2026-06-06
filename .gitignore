@@ -17,5 +17,12 @@ yarn-error.log
 /.idea
 /.vscode
 /generate-modul.js
+/generate-audit.js
+/generate-jawaban.js
+/generate-laporan.js
+/report-shots
+/Laporan_Akhir_Workshop.docx
+/Laporan_Audit_Responsi.docx
+/Kunci_Jawaban_Responsi.docx
 /public/uploads
 /.claude

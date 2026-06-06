@@ -279,14 +279,14 @@
                 </ul>
               </div>
             </li>
-            {{-- Week 9: NFC Absensi --}}
+            {{-- Week 11: NFC Absensi --}}
             <li class="nav-item">
-              <a class="nav-link {{ request()->is('nfc*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week9" aria-expanded="{{ request()->is('nfc*') ? 'true' : 'false' }}" aria-controls="week9">
-                <span class="menu-title">Week 9</span>
+              <a class="nav-link {{ request()->is('nfc*') ? '' : 'collapsed' }}" data-bs-toggle="collapse" href="#week11" aria-expanded="{{ request()->is('nfc*') ? 'true' : 'false' }}" aria-controls="week11">
+                <span class="menu-title">Week 11 — NFC</span>
                 <i class="menu-arrow"></i>
-                <i class="mdi mdi-numeric-9-box menu-icon"></i>
+                <i class="mdi mdi-nfc menu-icon"></i>
               </a>
-              <div class="collapse {{ request()->is('nfc*') ? 'show' : '' }}" id="week9">
+              <div class="collapse {{ request()->is('nfc*') ? 'show' : '' }}" id="week11">
                 <ul class="nav flex-column sub-menu">
                   <li class="nav-item">
                     <a class="nav-link" href="{{ route('nfc.scanner') }}" target="_blank">Scanner NFC (HP)</a>
